@@ -1,0 +1,27 @@
+topics:
+- name    : joy_teleop
+  topic   : joy_teleop
+  timeout : 1.0
+  priority: 100
+
+- name    : web_teleop
+  topic   : web_teleop
+  timeout : 1.0
+  priority: 90
+
+- name    : nav
+  topic   : nav
+  timeout : 1.0
+  priority: 50
+
+- name    : other
+  topic   : other
+  timeout : 1.0
+  priority: 10
+
+
+locks:
+- name    : stop_navigation
+  topic   : disable_nav
+  timeout : 0.0
+  priority: 60

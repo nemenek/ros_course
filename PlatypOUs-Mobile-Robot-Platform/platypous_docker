@@ -1,0 +1,84 @@
+#!/bin/bash
+
+if [ "$1" = "build" ]; then
+    docker build -f docker/Dockerfile -t platypous:latest .
+
+elif [ "$1" = "run" ]; then
+    docker run \
+        -it \
+        --rm \
+        --user=$(id -u $USER):$(id -g $USER) \
+        --workdir="/home/$USER" \
+        --volume="/home/$USER:/home/$USER" \
+        --volume="/etc/group:/etc/group:ro" \
+        --volume="/etc/passwd:/etc/passwd:ro" \
+        --volume="/etc/shadow:/etc/shadow:ro" \
+        --volume="/etc/sudoers.d:/etc/sudoers.d:ro" \
+        --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+        --env="DISPLAY" \
+        --network host \
+        --privileged \
+        -v /dev:/dev \
+        platypous:latest $2
+
+elif [ "$1" = "auto_run" ]; then
+    if docker ps -a | grep -q "platypous_container"; then
+        docker rm -f platypous_container
+    fi
+
+    docker run \
+        -d \
+        --restart always \
+        --user=$(id -u $USER):$(id -g $USER) \
+        --workdir="/home/$USER" \
+        --volume="/home/$USER:/home/$USER" \
+        --volume="/etc/group:/etc/group:ro" \
+        --volume="/etc/passwd:/etc/passwd:ro" \
+        --volume="/etc/shadow:/etc/shadow:ro" \
+        --volume="/etc/sudoers.d:/etc/sudoers.d:ro" \
+        --network host \
+        --privileged \
+        -v /dev:/dev \
+        --name platypous_container \
+        platypous:latest $2
+    
+    echo ""
+    echo "    PlatypOUs container created and started. It will automatically restart on failure/reboot, until stopped with the stop command."
+    echo ""
+
+elif [ "$1" = "stop" ]; then
+    if docker ps -a | grep -q "platypous_container"; then
+        docker rm -f platypous_container
+        
+        echo ""
+        echo "    PlatypOUs container stopped and removed. It will not start automatically anymore."
+        echo ""
+    else
+        echo ""
+        echo "    PlatypOUs container is not running."
+        echo ""
+    fi
+
+
+else
+    echo ""
+    echo "    Usage: ./platypous_docker [option] [command]"
+    echo ""
+    echo "      [option] can be:"
+    echo ""
+    echo "        build:          builds the docker image from the repository"
+    echo "        run:            starts the container in the current terminal"
+    echo "                        (can be stopped by CTRL+C)"
+    echo "        auto_run:       starts the container in the background, and "
+    echo "                        it will automatically restart after that,"
+    echo "                        even after computer restarts"
+    echo "        stop:           stops and removes the container"
+    echo "                        (after that, it won't restart"
+    echo "                        until the next 'auto_run')"
+    echo ""
+    echo "      for example: ./platypous_docker run [command]"
+    echo ""
+    echo "      [command] is the argument passed to the './platypous' script."
+    echo ""
+fi
+
